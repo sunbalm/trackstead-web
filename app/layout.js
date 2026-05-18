@@ -1,38 +1,23 @@
 import "./globals.css";
 import { AuthProvider } from "../components/AuthProvider";
+import { ThemeProvider } from "../components/ThemeProvider";
 import Nav from "../components/Nav";
 import PwaRegister from "../components/PwaRegister";
+import Footer from "@/components/Footer";
 
 export const metadata = {
-  title: "Clearwell",
+  title: "Trackstead",
   description: "Track habits, recovery, health, money, and personal progress.",
   manifest: "/manifest.json",
-  themeColor: "#6d9dfc",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png"
+  },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "Clearwell"
-  },
-  icons: {
-    icon: [
-      {
-        url: "/icons/icon-192.png",
-        sizes: "192x192",
-        type: "image/png"
-      },
-      {
-        url: "/icons/icon-512.png",
-        sizes: "512x512",
-        type: "image/png"
-      }
-    ],
-    apple: [
-      {
-        url: "/icons/icon-192.png",
-        sizes: "192x192",
-        type: "image/png"
-      }
-    ]
+    statusBarStyle: "black-translucent",
+    title: "Trackstead"
   }
 };
 
@@ -40,7 +25,7 @@ export const viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#6d9dfc"
+  themeColor: "#020817"
 };
 
 export default function RootLayout({ children }) {
@@ -48,12 +33,15 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <PwaRegister />
-        <AuthProvider>
-          <div className="page">
-            <Nav />
-            {children}
-          </div>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <div className="page">
+              <Nav />
+              {children}
+              <Footer />
+            </div>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

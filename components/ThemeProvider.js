@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const ThemeContext = createContext(null);
 
-const STORAGE_KEY = "clearwell_theme";
+const STORAGE_KEY = "trackstead_theme";
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState("themeSoft");

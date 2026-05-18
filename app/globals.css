@@ -75,7 +75,7 @@ button {
   height: 38px;
   border-radius: 14px;
   background:
-    url("/icons/clearwell-icon.svg") center / cover no-repeat,
+    url("/icons/trackstead-icon.svg") center / cover no-repeat,
     linear-gradient(135deg, #6d9dfc, #62b883);
   box-shadow: 0 12px 30px rgba(109, 157, 252, 0.28);
 }

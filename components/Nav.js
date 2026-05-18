@@ -4,6 +4,7 @@ import Link from "next/link";
 import { signOut } from "firebase/auth";
 import { auth } from "../lib/firebase";
 import { useAuth } from "./AuthProvider";
+import Image from "next/image";
 
 export default function Nav() {
   const { firebaseUser, authLoading } = useAuth();
@@ -15,8 +16,13 @@ export default function Nav() {
   return (
     <nav className="nav">
       <Link href="/" className="logo">
-        <div className="logoMark" />
-        <span>Clearwell</span>
+        <Image
+            src="/icons/icon-512.png"
+            alt="Trackstead"
+            width={38}
+            height={38}
+            />
+        <span>Trackstead</span>
       </Link>
 
       <div className="navLinks">

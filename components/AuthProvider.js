@@ -26,7 +26,7 @@ export function AuthProvider({ children }) {
         const data = await authFetch(user, "/api/auth/me");
         setDbUser(data.user);
       } catch (error) {
-        console.error("Could not load Clearwell user:", error.message);
+        console.error("Could not load Trackstead user:", error.message);
         setDbUser(null);
       } finally {
         setAuthLoading(false);

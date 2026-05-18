@@ -4,14 +4,14 @@ export default function PrivacyPage() {
       <h1>Privacy Policy</h1>
 
       <p>
-        Clearwell is a personal tracking app for habits, recovery, wellness,
+        Trackstead is a personal tracking app for habits, recovery, wellness,
         fitness, finances, and custom progress goals. This policy explains what
         information the app stores and how it is used.
       </p>
 
       <h2>Information You Provide</h2>
       <p>
-        Clearwell may store information you enter into the app, including tracker
+        Trackstead may store information you enter into the app, including tracker
         names, start dates, notes, custom fields, milestones, entries, resets,
         and account information such as your email address.
       </p>
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
 
       <h2>Authentication</h2>
       <p>
-        Clearwell uses Firebase Authentication for login and account management.
+        Trackstead uses Firebase Authentication for login and account management.
         Firebase may process login details such as your email address or Google
         account information depending on your chosen sign-in method.
       </p>
@@ -46,21 +46,21 @@ export default function PrivacyPage() {
 
       <h2>Account Deletion</h2>
       <p>
-        If you delete your account from the profile page, Clearwell attempts to
+        If you delete your account from the profile page, Trackstead attempts to
         delete your profile, trackers, entries, resets, and Firebase account.
         This action cannot be undone.
       </p>
 
       <h2>Security</h2>
       <p>
-        Clearwell uses authenticated API requests and verifies Firebase ID tokens
+        Trackstead uses authenticated API requests and verifies Firebase ID tokens
         on the server. No system is perfectly secure, so avoid entering
         information that would create serious harm if exposed.
       </p>
 
       <h2>Medical, Financial, and Legal Disclaimer</h2>
       <p>
-        Clearwell is not medical, financial, legal, or mental health advice. The
+        Trackstead is not medical, financial, legal, or mental health advice. The
         app is for personal tracking and reflection only. Contact a qualified
         professional for guidance related to health, addiction, finances, or
         safety.
@@ -68,7 +68,7 @@ export default function PrivacyPage() {
 
       <h2>Changes</h2>
       <p>
-        This policy may be updated as Clearwell changes. Continued use of the
+        This policy may be updated as Trackstead changes. Continued use of the
         app means you accept the updated policy.
       </p>
     </main>

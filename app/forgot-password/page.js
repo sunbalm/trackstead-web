@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
       <section className="card authCard">
         <h1>Reset password</h1>
         <p>
-          Enter your email and Clearwell will send you a password reset link.
+          Enter your email and Trackstead will send you a password reset link.
         </p>
 
         <form className="form" onSubmit={handleSubmit}>

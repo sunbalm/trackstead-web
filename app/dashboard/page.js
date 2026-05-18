@@ -126,7 +126,7 @@ return {
   }, [trackers]);
 
   if (authLoading || !firebaseUser) {
-    return <PageLoader message="Loading Clearwell..." />;
+    return <PageLoader message="Loading Trackstead..." />;
   }
 
   return (
@@ -134,7 +134,7 @@ return {
       <section className="dashboardHeader">
         <div className="dashboardTopRow">
           <div>
-            <h1>Your Clearwell dashboard</h1>
+            <h1>Your Trackstead dashboard</h1>
             <p>
               Welcome{dbUser?.email ? `, ${dbUser.email}` : ""}. Track habits,
               health, money, and progress from one calm place.

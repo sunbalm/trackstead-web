@@ -26,7 +26,7 @@ export default function SettingsPage() {
     <main>
       <section className="dashboardHeader">
         <h1>Settings</h1>
-        <p>Customize your Clearwell experience.</p>
+        <p>Customize your Trackstead experience.</p>
       </section>
 
       <section className="settingsGrid">

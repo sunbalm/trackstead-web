@@ -1,4 +1,4 @@
-const CACHE_NAME = "clearwell-cache-v1";
+const CACHE_NAME = "trackstead-cache-v1";
 
 const STATIC_ASSETS = [
   "/",

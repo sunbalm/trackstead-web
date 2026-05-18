@@ -61,7 +61,7 @@ export default function SignupPage() {
     <main className="authShell">
       <section className="card authCard">
         <h1>Create account</h1>
-        <p>Start building your Clearwell dashboard.</p>
+        <p>Start building your Trackstead dashboard.</p>
 
         <button
           type="button"

@@ -7,7 +7,7 @@ export default function HomePage() {
         <section className="heroText">
           <h1>Build a clearer path forward.</h1>
           <p>
-            Clearwell helps you track habits, recovery, wellness, workouts,
+            Trackstead helps you track habits, recovery, wellness, workouts,
             spending, screen time, weight, calories, and personal progress from
             one calm dashboard.
           </p>
@@ -24,7 +24,7 @@ export default function HomePage() {
 
         <section className="card previewCard">
           <div className="previewHeader">
-            <div className="previewTitle">Today in Clearwell</div>
+            <div className="previewTitle">Today in Trackstead</div>
             <div className="previewBadge">On track</div>
           </div>
 
@@ -94,7 +94,7 @@ export default function HomePage() {
         <div>
           <h2>Start with one tracker.</h2>
           <p>
-            Add more as your dashboard grows. Clearwell is built to expand with
+            Add more as your dashboard grows. Trackstead is built to expand with
             your goals.
           </p>
         </div>

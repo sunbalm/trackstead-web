@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
   async function handleDeleteAccount() {
     const confirmed = window.confirm(
-      "Delete your Clearwell account? This permanently deletes your trackers, entries, and profile data."
+      "Delete your Trackstead account? This permanently deletes your trackers, entries, and profile data."
     );
 
     if (!confirmed || !firebaseUser) return;
@@ -78,7 +78,7 @@ if (authLoading || !firebaseUser) {
     <main>
       <section className="dashboardHeader">
         <h1>Your profile</h1>
-        <p>Manage your Clearwell account and app settings.</p>
+        <p>Manage your Trackstead account and app settings.</p>
       </section>
 
       <section className="profileGrid">
@@ -88,7 +88,7 @@ if (authLoading || !firebaseUser) {
           <h2>Account</h2>
           <p className="mutedText">
             This account is connected with Firebase Authentication and linked to
-            your Clearwell profile in MongoDB.
+            your Trackstead profile in MongoDB.
           </p>
 
           <div className="actionsRow" style={{ marginTop: 20 }}>
@@ -125,7 +125,7 @@ if (authLoading || !firebaseUser) {
             </div>
 
             <div className="profileInfoItem">
-              <span>Clearwell User ID</span>
+              <span>Trackstead User ID</span>
               <strong>{dbUser?._id || "Loading..."}</strong>
             </div>
 
@@ -142,7 +142,7 @@ if (authLoading || !firebaseUser) {
       <section className="card detailPanel dangerZone" style={{ marginBottom: 72 }}>
         <h2>Danger Zone</h2>
         <p className="warningText">
-          Deleting your account permanently removes your Clearwell profile,
+          Deleting your account permanently removes your Trackstead profile,
           trackers, and tracker entries. This cannot be undone.
         </p>
 

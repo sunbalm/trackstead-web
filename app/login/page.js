@@ -61,7 +61,7 @@ export default function LoginPage() {
     <main className="authShell">
       <section className="card authCard">
         <h1>Welcome back</h1>
-        <p>Login to view your Clearwell dashboard.</p>
+        <p>Login to view your Trackstead dashboard.</p>
 
         <button
           type="button"
