@@ -1436,3 +1436,58 @@ select:focus {
     grid-template-columns: 1fr;
   }
 }
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(2, 8, 23, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modalCard {
+  width: min(920px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 28px;
+  background: var(--card);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.32);
+  padding: 24px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modalHeader h2 {
+  margin: 0 0 6px;
+  letter-spacing: -0.05em;
+}
+
+.modalHeader p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.modalClose {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  font-weight: 900;
+  font-size: 1.1rem;
+}
+
+.templateOption {
+  cursor: pointer;
+}

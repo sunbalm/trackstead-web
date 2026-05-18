@@ -1,16 +1,17 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../../components/AuthProvider";
 import { authFetch } from "../../../lib/api";
 
 export default function NewTrackerPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { firebaseUser, authLoading } = useAuth();
 
   const [templates, setTemplates] = useState([]);
-  const [selectedType, setSelectedType] = useState("smoking");
+  const [selectedType, setSelectedType] = useState("");
   const [startDate, setStartDate] = useState(getNowForInput());
   const [title, setTitle] = useState("");
   const [goal, setGoal] = useState("");
@@ -28,6 +29,7 @@ export default function NewTrackerPage() {
   }, [templates, selectedType]);
 
   const isCustom = selectedType === "custom";
+  const modalOpen = Boolean(selectedTemplate);
 
   useEffect(() => {
     if (!authLoading && !firebaseUser) {
@@ -42,28 +44,51 @@ export default function NewTrackerPage() {
       try {
         const data = await authFetch(firebaseUser, "/api/trackers/templates");
         setTemplates(data.templates || []);
+
+        const typeFromQuery = searchParams.get("type");
+
+        if (typeFromQuery) {
+          const foundTemplate = data.templates?.find(
+            template => template.type === typeFromQuery
+          );
+
+          if (foundTemplate) {
+            openTemplate(foundTemplate);
+          }
+        }
       } catch (error) {
         setError(error.message || "Could not load templates.");
       }
     }
 
     loadTemplates();
-  }, [firebaseUser]);
+  }, [firebaseUser, searchParams]);
 
-  useEffect(() => {
-    if (!selectedTemplate) return;
-
-    setTitle(selectedTemplate.title);
-    setGoal(selectedTemplate.goal || "");
+  function openTemplate(template) {
+    setSelectedType(template.type);
+    setTitle(template.title);
+    setGoal(template.goal || "");
+    setNotes("");
+    setStartDate(getNowForInput());
+    setError("");
 
     const nextValues = {};
 
-    selectedTemplate.fields.forEach(field => {
+    template.fields.forEach(field => {
       nextValues[field.key] = field.value;
     });
 
     setFieldValues(nextValues);
-  }, [selectedTemplate]);
+    setCustomFields([createBlankCustomField()]);
+    setCustomMilestones([createBlankCustomMilestone()]);
+  }
+
+  function closeModal() {
+    if (submitting) return;
+
+    setSelectedType("");
+    setError("");
+  }
 
   function updateFieldValue(key, value) {
     setFieldValues(current => ({
@@ -155,6 +180,9 @@ export default function NewTrackerPage() {
 
   async function handleSubmit(event) {
     event.preventDefault();
+
+    if (!selectedTemplate) return;
+
     setError("");
     setSubmitting(true);
 
@@ -204,273 +232,319 @@ export default function NewTrackerPage() {
     <main>
       <section className="dashboardHeader">
         <h1>Add a tracker</h1>
-        <p>Choose a template, customize the details, and start tracking.</p>
+        <p>Choose a tracker type. You’ll customize it in the next step.</p>
       </section>
 
-      <form className="card authCard formGrid" onSubmit={handleSubmit}>
-        <div className="field">
-          <label>Tracker Type</label>
+      {error && !modalOpen ? <p className="error">{error}</p> : null}
 
-          <div className="templateGrid">
-            {templates.map(template => (
-              <button
-                key={template.type}
-                type="button"
-                className={
-                  selectedType === template.type
-                    ? "templateOption active"
-                    : "templateOption"
-                }
-                onClick={() => setSelectedType(template.type)}
-              >
-                <strong>{template.title}</strong>
-                <span>{template.goal}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="field">
-          <label htmlFor="title">Tracker Title</label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={event => setTitle(event.target.value)}
-            required
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="goal">Goal</label>
-          <input
-            id="goal"
-            type="text"
-            value={goal}
-            onChange={event => setGoal(event.target.value)}
-            placeholder="Example: Save money and stay consistent."
-          />
-        </div>
-
-        <div className="field">
-          <label htmlFor="startDate">Start Date & Time</label>
-          <input
-            id="startDate"
-            type="datetime-local"
-            value={startDate}
-            onChange={event => setStartDate(event.target.value)}
-            required
-          />
-        </div>
-
-        {isCustom ? (
-          <>
-            <div className="field">
-              <label>Custom Fields</label>
-
-              <div className="customFieldEditor">
-                {customFields.map((field, index) => (
-                  <div className="customFieldRow" key={field.id}>
-                    <div className="field">
-                      <label>Label</label>
-                      <input
-                        value={field.label}
-                        onChange={event =>
-                          updateCustomField(index, "label", event.target.value)
-                        }
-                        placeholder="Example: Cups per day"
-                      />
-                    </div>
-
-                    <div className="field">
-                      <label>Type</label>
-                      <select
-                        value={field.type}
-                        onChange={event =>
-                          updateCustomField(index, "type", event.target.value)
-                        }
-                      >
-                        <option value="number">Number</option>
-                        <option value="text">Text</option>
-                        <option value="boolean">Yes / No</option>
-                      </select>
-                    </div>
-
-                    <div className="field">
-                      <label>Value</label>
-                      <input
-                        value={field.value}
-                        onChange={event =>
-                          updateCustomField(index, "value", event.target.value)
-                        }
-                        placeholder="Example: 3"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      className="removeButton"
-                      onClick={() => removeCustomField(index)}
-                    >
-                      Remove
-                    </button>
-
-                    <div className="field">
-                      <label>Unit</label>
-                      <input
-                        value={field.unit}
-                        onChange={event =>
-                          updateCustomField(index, "unit", event.target.value)
-                        }
-                        placeholder="Example: cups"
-                      />
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  className="smallButton"
-                  onClick={addCustomField}
-                >
-                  Add Another Field
-                </button>
-              </div>
-            </div>
-
-            <div className="field">
-              <label>Custom Milestones</label>
-
-              <div className="milestoneEditor">
-                {customMilestones.map((milestone, index) => (
-                  <div className="milestoneEditorRow" key={milestone.id}>
-                    <div className="field">
-                      <label>Label</label>
-                      <input
-                        value={milestone.label}
-                        onChange={event =>
-                          updateCustomMilestone(
-                            index,
-                            "label",
-                            event.target.value
-                          )
-                        }
-                        placeholder="Example: 1 Week"
-                      />
-                    </div>
-
-                    <div className="field">
-                      <label>After</label>
-                      <input
-                        type="number"
-                        min="1"
-                        value={milestone.amount}
-                        onChange={event =>
-                          updateCustomMilestone(
-                            index,
-                            "amount",
-                            event.target.value
-                          )
-                        }
-                        placeholder="7"
-                      />
-                    </div>
-
-                    <div className="field">
-                      <label>Unit</label>
-                      <select
-                        value={milestone.unit}
-                        onChange={event =>
-                          updateCustomMilestone(index, "unit", event.target.value)
-                        }
-                      >
-                        <option value="minutes">Minutes</option>
-                        <option value="hours">Hours</option>
-                        <option value="days">Days</option>
-                        <option value="weeks">Weeks</option>
-                        <option value="months">Months</option>
-                        <option value="years">Years</option>
-                      </select>
-                    </div>
-
-                    <button
-                      type="button"
-                      className="removeButton"
-                      onClick={() => removeCustomMilestone(index)}
-                    >
-                      Remove
-                    </button>
-
-                    <div className="field">
-                      <label>Description</label>
-                      <input
-                        value={milestone.description}
-                        onChange={event =>
-                          updateCustomMilestone(
-                            index,
-                            "description",
-                            event.target.value
-                          )
-                        }
-                        placeholder="Example: One week of progress."
-                      />
-                    </div>
-                  </div>
-                ))}
-
-                <button
-                  type="button"
-                  className="smallButton"
-                  onClick={addCustomMilestone}
-                >
-                  Add Another Milestone
-                </button>
-              </div>
-            </div>
-          </>
-        ) : selectedTemplate?.fields?.length ? (
-          <div className="field">
-            <label>Details</label>
-
-            <div className="fieldGrid">
-              {selectedTemplate.fields.map(field => (
-                <div className="field" key={field.key}>
-                  <label htmlFor={field.key}>
-                    {field.label}
-                    {field.unit ? ` (${field.unit})` : ""}
-                  </label>
-                  <input
-                    id={field.key}
-                    type={field.type === "number" ? "number" : "text"}
-                    value={fieldValues[field.key] ?? ""}
-                    onChange={event =>
-                      updateFieldValue(field.key, event.target.value)
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        <div className="field">
-          <label htmlFor="notes">Notes</label>
-          <textarea
-            id="notes"
-            rows="4"
-            value={notes}
-            onChange={event => setNotes(event.target.value)}
-          />
-        </div>
-
-        {error ? <div className="error">{error}</div> : null}
-
-        <div className="actionsRow">
-          <button className="button" type="submit" disabled={submitting}>
-            {submitting ? "Creating..." : "Create Tracker"}
+      <section className="templateGrid">
+        {templates.map(template => (
+          <button
+            key={template.type}
+            type="button"
+            className="templateOption"
+            onClick={() => openTemplate(template)}
+          >
+            <strong>{template.title}</strong>
+            <span>{template.goal}</span>
           </button>
+        ))}
+      </section>
+
+      {modalOpen ? (
+        <div className="modalBackdrop" role="dialog" aria-modal="true">
+          <div className="modalPanel">
+            <div className="modalHeader">
+              <div>
+                <h2>{selectedTemplate.title}</h2>
+                <p>{selectedTemplate.goal}</p>
+              </div>
+
+              <button
+                type="button"
+                className="modalClose"
+                onClick={closeModal}
+                aria-label="Close modal"
+              >
+                ×
+              </button>
+            </div>
+
+            <form className="formGrid" onSubmit={handleSubmit}>
+              <div className="field">
+                <label htmlFor="title">Tracker Title</label>
+                <input
+                  id="title"
+                  type="text"
+                  value={title}
+                  onChange={event => setTitle(event.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="goal">Goal</label>
+                <input
+                  id="goal"
+                  type="text"
+                  value={goal}
+                  onChange={event => setGoal(event.target.value)}
+                  placeholder="Example: Save money and stay consistent."
+                />
+              </div>
+
+              <div className="field">
+                <label htmlFor="startDate">Start Date & Time</label>
+                <input
+                  id="startDate"
+                  type="datetime-local"
+                  value={startDate}
+                  onChange={event => setStartDate(event.target.value)}
+                  required
+                />
+              </div>
+
+              {isCustom ? (
+                <>
+                  <div className="field">
+                    <label>Custom Fields</label>
+
+                    <div className="customFieldEditor">
+                      {customFields.map((field, index) => (
+                        <div className="customFieldRow" key={field.id}>
+                          <div className="field">
+                            <label>Label</label>
+                            <input
+                              value={field.label}
+                              onChange={event =>
+                                updateCustomField(
+                                  index,
+                                  "label",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="Example: Cups per day"
+                            />
+                          </div>
+
+                          <div className="field">
+                            <label>Type</label>
+                            <select
+                              value={field.type}
+                              onChange={event =>
+                                updateCustomField(
+                                  index,
+                                  "type",
+                                  event.target.value
+                                )
+                              }
+                            >
+                              <option value="number">Number</option>
+                              <option value="text">Text</option>
+                              <option value="boolean">Yes / No</option>
+                            </select>
+                          </div>
+
+                          <div className="field">
+                            <label>Value</label>
+                            <input
+                              value={field.value}
+                              onChange={event =>
+                                updateCustomField(
+                                  index,
+                                  "value",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="Example: 3"
+                            />
+                          </div>
+
+                          <button
+                            type="button"
+                            className="removeButton"
+                            onClick={() => removeCustomField(index)}
+                          >
+                            Remove
+                          </button>
+
+                          <div className="field">
+                            <label>Unit</label>
+                            <input
+                              value={field.unit}
+                              onChange={event =>
+                                updateCustomField(
+                                  index,
+                                  "unit",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="Example: cups"
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        className="smallButton"
+                        onClick={addCustomField}
+                      >
+                        Add Another Field
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="field">
+                    <label>Custom Milestones</label>
+
+                    <div className="milestoneEditor">
+                      {customMilestones.map((milestone, index) => (
+                        <div className="milestoneEditorRow" key={milestone.id}>
+                          <div className="field">
+                            <label>Label</label>
+                            <input
+                              value={milestone.label}
+                              onChange={event =>
+                                updateCustomMilestone(
+                                  index,
+                                  "label",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="Example: 1 Week"
+                            />
+                          </div>
+
+                          <div className="field">
+                            <label>After</label>
+                            <input
+                              type="number"
+                              min="1"
+                              value={milestone.amount}
+                              onChange={event =>
+                                updateCustomMilestone(
+                                  index,
+                                  "amount",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="7"
+                            />
+                          </div>
+
+                          <div className="field">
+                            <label>Unit</label>
+                            <select
+                              value={milestone.unit}
+                              onChange={event =>
+                                updateCustomMilestone(
+                                  index,
+                                  "unit",
+                                  event.target.value
+                                )
+                              }
+                            >
+                              <option value="minutes">Minutes</option>
+                              <option value="hours">Hours</option>
+                              <option value="days">Days</option>
+                              <option value="weeks">Weeks</option>
+                              <option value="months">Months</option>
+                              <option value="years">Years</option>
+                            </select>
+                          </div>
+
+                          <button
+                            type="button"
+                            className="removeButton"
+                            onClick={() => removeCustomMilestone(index)}
+                          >
+                            Remove
+                          </button>
+
+                          <div className="field">
+                            <label>Description</label>
+                            <input
+                              value={milestone.description}
+                              onChange={event =>
+                                updateCustomMilestone(
+                                  index,
+                                  "description",
+                                  event.target.value
+                                )
+                              }
+                              placeholder="Example: One week of progress."
+                            />
+                          </div>
+                        </div>
+                      ))}
+
+                      <button
+                        type="button"
+                        className="smallButton"
+                        onClick={addCustomMilestone}
+                      >
+                        Add Another Milestone
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : selectedTemplate.fields?.length ? (
+                <div className="field">
+                  <label>Details</label>
+
+                  <div className="fieldGrid">
+                    {selectedTemplate.fields.map(field => (
+                      <div className="field" key={field.key}>
+                        <label htmlFor={field.key}>
+                          {field.label}
+                          {field.unit ? ` (${field.unit})` : ""}
+                        </label>
+
+                        <input
+                          id={field.key}
+                          type={field.type === "number" ? "number" : "text"}
+                          value={fieldValues[field.key] ?? ""}
+                          onChange={event =>
+                            updateFieldValue(field.key, event.target.value)
+                          }
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="field">
+                <label htmlFor="notes">Notes</label>
+                <textarea
+                  id="notes"
+                  rows="4"
+                  value={notes}
+                  onChange={event => setNotes(event.target.value)}
+                />
+              </div>
+
+              {error ? <div className="error">{error}</div> : null}
+
+              <div className="actionsRow">
+                <button className="button" type="submit" disabled={submitting}>
+                  {submitting ? "Creating..." : "Create Tracker"}
+                </button>
+
+                <button
+                  type="button"
+                  className="button secondary"
+                  onClick={closeModal}
+                  disabled={submitting}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      ) : null}
     </main>
   );
 }

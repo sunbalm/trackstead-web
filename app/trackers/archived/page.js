@@ -99,11 +99,12 @@ export default function ArchivedTrackersPage() {
       ) : (
         <section className="trackerGrid">
           {trackers.map(tracker => (
-            <ArchivedTrackerCard
-              key={tracker._id}
-              tracker={tracker}
-              onRestore={restoreTracker}
-            />
+<ArchivedTrackerCard
+  key={tracker._id}
+  tracker={tracker}
+  onRestore={restoreTracker}
+  onDelete={permanentlyDeleteTracker}
+/>
           ))}
         </section>
       )}
@@ -111,7 +112,29 @@ export default function ArchivedTrackersPage() {
   );
 }
 
-function ArchivedTrackerCard({ tracker, onRestore }) {
+async function permanentlyDeleteTracker(trackerId) {
+  const confirmed = window.confirm(
+    "Permanently delete this tracker? This will also delete its entries and reset history. This cannot be undone."
+  );
+
+  if (!confirmed) return;
+
+  setError("");
+
+  try {
+    await authFetch(firebaseUser, `/api/trackers/${trackerId}/permanent`, {
+      method: "DELETE"
+    });
+
+    setTrackers(current =>
+      current.filter(tracker => tracker._id !== trackerId)
+    );
+  } catch (error) {
+    setError(error.message || "Could not permanently delete tracker.");
+  }
+}
+
+function ArchivedTrackerCard({ tracker, onRestore, onDelete }) {
   const unlocked = getUnlockedMilestones(tracker);
   const nextMilestone = getNextMilestone(tracker);
   const summaryStats = getTrackerSummaryStats(tracker);
@@ -155,15 +178,23 @@ function ArchivedTrackerCard({ tracker, onRestore }) {
         </span>
       </div>
 
-      <div className="actionsRow" style={{ marginTop: 18 }}>
-        <button
-          type="button"
-          className="button"
-          onClick={() => onRestore(tracker._id)}
-        >
-          Restore
-        </button>
-      </div>
+ <div className="actionsRow" style={{ marginTop: 18 }}>
+  <button
+    type="button"
+    className="button"
+    onClick={() => onRestore(tracker._id)}
+  >
+    Restore
+  </button>
+
+  <button
+    type="button"
+    className="dangerButton"
+    onClick={() => onDelete(tracker._id)}
+  >
+    Delete Forever
+  </button>
+</div>
     </article>
   );
 }
