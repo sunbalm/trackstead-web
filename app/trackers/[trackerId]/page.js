@@ -3,13 +3,19 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import PageLoader from "../../../components/PageLoader";
 import TrackerEntryForm from "../../../components/TrackerEntryForm";
 import TrackerEntryList from "../../../components/TrackerEntryList";
 import SimpleEntryChart from "../../../components/SimpleEntryChart";
+import TrackerResetForm from "../../../components/TrackerResetForm";
+import TrackerResetList from "../../../components/TrackerResetList";
+import TrackerAchievements from "../../../components/TrackerAchievements";
 import { useAuth } from "../../../components/AuthProvider";
 import { authFetch } from "../../../lib/api";
 import { getEntryBasedSummary } from "../../../lib/entryStats";
+import { getTrackerDisplay } from "../../../lib/trackerDisplay";
 import {
+  formatCurrentStreak,
   formatElapsed,
   getElapsedParts,
   getNextMilestone,
@@ -24,8 +30,11 @@ export default function TrackerDetailPage() {
 
   const [tracker, setTracker] = useState(null);
   const [entries, setEntries] = useState([]);
+  const [resets, setResets] = useState([]);
   const [loadingTracker, setLoadingTracker] = useState(true);
   const [entrySubmitting, setEntrySubmitting] = useState(false);
+  const [entryUpdateSubmitting, setEntryUpdateSubmitting] = useState(false);
+  const [resetSubmitting, setResetSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [, setNowTick] = useState(Date.now());
 
@@ -44,17 +53,19 @@ export default function TrackerDetailPage() {
   }, [authLoading, firebaseUser, router]);
 
   useEffect(() => {
-    async function loadTrackerAndEntries() {
+    async function loadTrackerData() {
       if (!firebaseUser || !params.trackerId) return;
 
       try {
-        const [trackerData, entryData] = await Promise.all([
+        const [trackerData, entryData, resetData] = await Promise.all([
           authFetch(firebaseUser, `/api/trackers/${params.trackerId}`),
-          authFetch(firebaseUser, `/api/tracker-entries/${params.trackerId}`)
+          authFetch(firebaseUser, `/api/tracker-entries/${params.trackerId}`),
+          authFetch(firebaseUser, `/api/tracker-resets/${params.trackerId}`)
         ]);
 
         setTracker(trackerData.tracker);
         setEntries(entryData.entries || []);
+        setResets(resetData.resets || []);
       } catch (error) {
         setError(error.message || "Could not load tracker.");
       } finally {
@@ -62,7 +73,7 @@ export default function TrackerDetailPage() {
       }
     }
 
-    loadTrackerAndEntries();
+    loadTrackerData();
   }, [firebaseUser, params.trackerId]);
 
   async function archiveTracker() {
@@ -80,6 +91,22 @@ export default function TrackerDetailPage() {
       router.push("/dashboard");
     } catch (error) {
       setError(error.message || "Could not archive tracker.");
+    }
+  }
+
+  async function duplicateTracker() {
+    try {
+      const data = await authFetch(
+        firebaseUser,
+        `/api/trackers/${tracker._id}/duplicate`,
+        {
+          method: "POST"
+        }
+      );
+
+      router.push(`/trackers/${data.tracker._id}/edit`);
+    } catch (error) {
+      setError(error.message || "Could not duplicate tracker.");
     }
   }
 
@@ -105,6 +132,30 @@ export default function TrackerDetailPage() {
     }
   }
 
+  async function updateEntry(entryId, entryPayload) {
+    setEntryUpdateSubmitting(true);
+    setError("");
+
+    try {
+      const data = await authFetch(
+        firebaseUser,
+        `/api/tracker-entries/${tracker._id}/${entryId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(entryPayload)
+        }
+      );
+
+      setEntries(current =>
+        current.map(entry => (entry._id === entryId ? data.entry : entry))
+      );
+    } catch (error) {
+      setError(error.message || "Could not update entry.");
+    } finally {
+      setEntryUpdateSubmitting(false);
+    }
+  }
+
   async function deleteEntry(entryId) {
     const confirmed = window.confirm("Delete this entry?");
 
@@ -125,18 +176,92 @@ export default function TrackerDetailPage() {
     }
   }
 
+  async function addReset(resetPayload) {
+    const confirmed = window.confirm(
+      "Log a reset for this tracker? Your history stays saved, but your current streak will restart from this reset."
+    );
+
+    if (!confirmed) return;
+
+    setResetSubmitting(true);
+    setError("");
+
+    try {
+      const data = await authFetch(
+        firebaseUser,
+        `/api/tracker-resets/${tracker._id}`,
+        {
+          method: "POST",
+          body: JSON.stringify(resetPayload)
+        }
+      );
+
+      setResets(current => [data.reset, ...current]);
+    } catch (error) {
+      setError(error.message || "Could not log reset.");
+    } finally {
+      setResetSubmitting(false);
+    }
+  }
+
+  async function quickResetTracker() {
+    const confirmed = window.confirm(
+      "Reset this tracker now? Your history will stay saved, but your current streak will restart from this moment."
+    );
+
+    if (!confirmed) return;
+
+    setResetSubmitting(true);
+    setError("");
+
+    try {
+      const data = await authFetch(
+        firebaseUser,
+        `/api/tracker-resets/${tracker._id}`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            resetDate: new Date().toISOString(),
+            reason: "Quick reset",
+            notes: "Tracker was reset from the quick reset button."
+          })
+        }
+      );
+
+      setResets(current => [data.reset, ...current]);
+    } catch (error) {
+      setError(error.message || "Could not reset tracker.");
+    } finally {
+      setResetSubmitting(false);
+    }
+  }
+
+  async function deleteReset(resetId) {
+    const confirmed = window.confirm("Delete this reset?");
+
+    if (!confirmed) return;
+
+    try {
+      await authFetch(
+        firebaseUser,
+        `/api/tracker-resets/${tracker._id}/${resetId}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+      setResets(current => current.filter(reset => reset._id !== resetId));
+    } catch (error) {
+      setError(error.message || "Could not delete reset.");
+    }
+  }
+
   if (authLoading || !firebaseUser) {
-    return null;
+    return <PageLoader message="Loading tracker..." />;
   }
 
   if (loadingTracker) {
-    return (
-      <main>
-        <section className="card emptyState">
-          <h2>Loading tracker...</h2>
-        </section>
-      </main>
-    );
+    return <PageLoader message="Loading tracker..." />;
   }
 
   if (error || !tracker) {
@@ -159,10 +284,17 @@ export default function TrackerDetailPage() {
   const summaryStats = getTrackerSummaryStats(tracker);
   const entrySummaryStats = getEntryBasedSummary(tracker, entries);
   const chartFieldKey = getChartFieldKey(tracker);
+  const display = getTrackerDisplay(tracker.type);
 
   return (
     <main>
       <section className="dashboardHeader">
+        <div className="trackerHeroIcon">{display.icon}</div>
+
+        <div className="trackerMeta" style={{ marginBottom: 12 }}>
+          <span className="trackerTypeBadge">{display.label}</span>
+        </div>
+
         <h1>{tracker.title}</h1>
         <p>{tracker.goal || "Track your progress one day at a time."}</p>
       </section>
@@ -176,7 +308,12 @@ export default function TrackerDetailPage() {
           <div className="statGrid">
             <div className="statBox">
               <strong>{formatElapsed(tracker.startDate)}</strong>
-              <span>time tracked</span>
+              <span>total time tracked</span>
+            </div>
+
+            <div className="statBox">
+              <strong>{formatCurrentStreak(tracker, resets)}</strong>
+              <span>current streak</span>
             </div>
 
             <div className="statBox">
@@ -255,6 +392,23 @@ export default function TrackerDetailPage() {
 
             <button
               type="button"
+              className="button secondary"
+              onClick={duplicateTracker}
+            >
+              Duplicate
+            </button>
+
+            <button
+              type="button"
+              className="dangerButton"
+              onClick={quickResetTracker}
+              disabled={resetSubmitting}
+            >
+              {resetSubmitting ? "Resetting..." : "Reset Streak"}
+            </button>
+
+            <button
+              type="button"
               className="dangerButton"
               onClick={archiveTracker}
             >
@@ -296,6 +450,11 @@ export default function TrackerDetailPage() {
         </div>
       </section>
 
+      <section className="card detailPanel" style={{ marginBottom: 18 }}>
+        <h2>Achievements</h2>
+        <TrackerAchievements tracker={tracker} entries={entries} resets={resets} />
+      </section>
+
       <section className="detailGrid">
         <div className="card detailPanel">
           <h2>Add Entry</h2>
@@ -314,7 +473,30 @@ export default function TrackerDetailPage() {
         <div className="card detailPanel">
           <h2>Entry History</h2>
 
-          <TrackerEntryList entries={entries} onDelete={deleteEntry} />
+          <TrackerEntryList
+            tracker={tracker}
+            entries={entries}
+            onDelete={deleteEntry}
+            onUpdate={updateEntry}
+            updateSubmitting={entryUpdateSubmitting}
+          />
+        </div>
+      </section>
+
+      <section className="detailGrid">
+        <div className="card detailPanel dangerZone">
+          <h2>Log Reset</h2>
+          <p className="mutedText">
+            A reset records a slip without deleting your tracker history. Your
+            current streak will restart from the reset date.
+          </p>
+
+          <TrackerResetForm onSubmit={addReset} submitting={resetSubmitting} />
+        </div>
+
+        <div className="card detailPanel">
+          <h2>Reset History</h2>
+          <TrackerResetList resets={resets} onDelete={deleteReset} />
         </div>
       </section>
     </main>
@@ -323,9 +505,9 @@ export default function TrackerDetailPage() {
 
 function getChartFieldKey(tracker) {
   if (tracker.type === "weight") return "currentWeight";
-  if (tracker.type === "workout") return "minutesPerWorkout";
+  if (tracker.type === "workout") return "durationMinutes";
   if (tracker.type === "calories") return "estimatedDailyCalories";
-  if (tracker.type === "finance") return "monthlyExpenses";
+  if (tracker.type === "finance") return "amount";
 
   const firstNumberField = tracker.fields?.find(field => field.type === "number");
 
@@ -336,7 +518,7 @@ function getChartTitle(tracker) {
   if (tracker.type === "weight") return "Weight over time";
   if (tracker.type === "workout") return "Workout minutes over time";
   if (tracker.type === "calories") return "Calories over time";
-  if (tracker.type === "finance") return "Expenses over time";
+  if (tracker.type === "finance") return "Transaction amount over time";
 
   return "Progress over time";
 }
