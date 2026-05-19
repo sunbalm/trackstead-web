@@ -8,11 +8,10 @@ import Footer from "@/components/Footer";
 export const metadata = {
   title: "Trackstead",
   description: "Track habits, recovery, health, money, and personal progress.",
-  manifest: "/manifest.json",
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png"
+    apple: "/icons/apple-touch-icon.png"
   },
   appleWebApp: {
     capable: true,
