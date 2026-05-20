@@ -6,6 +6,7 @@ export default function Footer() {
       <span>© {new Date().getFullYear()} Trackstead</span>
 
       <div className="footerLinks">
+        <Link href="/contact">Contact</Link>
         <Link href="/privacy">Privacy</Link>
         <Link href="/terms">Terms</Link>
       </div>

@@ -1491,3 +1491,153 @@ select:focus {
 .templateOption {
   cursor: pointer;
 }
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(2, 8, 23, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.modalPanel {
+  width: min(920px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.32);
+  padding: 24px;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.modalHeader h2 {
+  margin: 0 0 6px;
+  letter-spacing: -0.05em;
+}
+
+.modalHeader p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.modalClose {
+  border: 1px solid var(--border);
+  background: white;
+  color: var(--text);
+  border-radius: 999px;
+  width: 42px;
+  height: 42px;
+  font-weight: 900;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.templateOption {
+  cursor: pointer;
+}
+
+body:has(.modalBackdrop) {
+  overflow: hidden;
+}
+
+@media (max-width: 760px) {
+  .modalBackdrop {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .modalPanel {
+    max-height: 94vh;
+    padding: 18px;
+    border-radius: 22px;
+  }
+}
+
+.logo img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.mobileMenuButton {
+  display: none;
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 14px;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+}
+
+.mobileMenuButton span {
+  display: block;
+  height: 2px;
+  background: var(--text);
+  border-radius: 999px;
+  margin: 5px 0;
+}
+
+.successMessage {
+  border: 1px solid rgba(98, 184, 131, 0.28);
+  background: rgba(98, 184, 131, 0.12);
+  color: var(--success);
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .nav {
+    position: relative;
+  }
+
+  .mobileMenuButton {
+    display: block;
+  }
+
+  .navLinks {
+    display: none;
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 90;
+
+    width: fit-content;
+    min-width: 0;
+
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    box-shadow: var(--shadow);
+    padding: 12px;
+  }
+
+  .navLinks.open {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .navLink {
+    width: auto;
+    min-width: 0;
+    display: inline-flex;
+    justify-content: flex-start;
+    white-space: nowrap;
+  }
+}

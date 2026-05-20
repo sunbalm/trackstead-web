@@ -52,29 +52,55 @@ export default function TrackerDetailPage() {
     }
   }, [authLoading, firebaseUser, router]);
 
-  useEffect(() => {
-    async function loadTrackerData() {
-      if (!firebaseUser || !params.trackerId) return;
+useEffect(() => {
+  async function loadTrackerData() {
+    if (!firebaseUser || !params.trackerId) return;
+
+    try {
+      const trackerData = await authFetch(
+        firebaseUser,
+        `/api/trackers/${params.trackerId}`
+      );
+
+      let entryData = {
+        entries: []
+      };
+
+      let resetData = {
+        resets: []
+      };
 
       try {
-        const [trackerData, entryData, resetData] = await Promise.all([
-          authFetch(firebaseUser, `/api/trackers/${params.trackerId}`),
-          authFetch(firebaseUser, `/api/tracker-entries/${params.trackerId}`),
-          authFetch(firebaseUser, `/api/tracker-resets/${params.trackerId}`)
-        ]);
-
-        setTracker(trackerData.tracker);
-        setEntries(entryData.entries || []);
-        setResets(resetData.resets || []);
-      } catch (error) {
-        setError(error.message || "Could not load tracker.");
-      } finally {
-        setLoadingTracker(false);
+        entryData = await authFetch(
+          firebaseUser,
+          `/api/tracker-entries/${params.trackerId}`
+        );
+      } catch (entryError) {
+        console.error("Entry request failed:", entryError);
       }
-    }
 
-    loadTrackerData();
-  }, [firebaseUser, params.trackerId]);
+      try {
+        resetData = await authFetch(
+          firebaseUser,
+          `/api/tracker-resets/${params.trackerId}`
+        );
+      } catch (resetError) {
+        console.error("Reset request failed:", resetError);
+      }
+
+      setTracker(trackerData.tracker);
+      setEntries(entryData.entries || []);
+      setResets(resetData.resets || []);
+    } catch (error) {
+      console.error("Tracker request failed:", error);
+      setError(error.message || "Could not load tracker.");
+    } finally {
+      setLoadingTracker(false);
+    }
+  }
+
+  loadTrackerData();
+}, [firebaseUser, params.trackerId]);
 
   async function archiveTracker() {
     const confirmed = window.confirm(
